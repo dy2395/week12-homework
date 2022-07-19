@@ -25,7 +25,6 @@ const db = mysql.createConnection(
   console.log(`Connected to the employee_db database.`)
 );
 
-
 const initPrompt = () => {
   inquirer
     .prompt({
@@ -33,18 +32,16 @@ const initPrompt = () => {
       name: "task",
       message: "What would you like to do?",
       choices: [
-        "View All Employee",
+        "View All Employees",
         "Add Employee",
         "Update Employee Role",
         "View All Roles",
-        "Add Role",
-        "View All Departments",
-        "Add Department"
+        "View All Departments"
       ]
     })
     .then(function ({ task }) {
       switch (task) {
-        case "View All Employee":
+        case "View All Employees":
           viewEmployee();
           break;
       
@@ -56,12 +53,12 @@ const initPrompt = () => {
           updateEmployeeRole();
           break;
 
-        case "View All Employee":
-          viewEmployee();
+        case "View All Roles":
+          viewRole();
           break;
-
-        case "Add Role":
-          addRole();
+        
+        case "View All Departments":
+          viewDepartment();
           break;
       }
     });
@@ -123,21 +120,71 @@ const addEmployee = () => {
       })
   });
 };
-// // Query database
-// let delete_id = 2;
-// let delete_book = "Decameron"
 
-// db.query(`DELETE FROM books WHERE id = ? AND book_name = ?`, [delete_id, delete_book], (err, result) => {
-//   if (err) {
-//     console.log(err);
-//   }
-//   console.log(result);
-// });
+// refer to https://github.com/samrogers15/MySQL-employee-tracker/blob/main/server.js
+updateEmployeeRole = () => {
+  db.query(`SELECT * FROM roles;`, (err, res) => {
+      if (err) throw err;
+      const roles = res.map(roles => ({name: roles.title, value: roles.id }));
+      db.query(`SELECT * FROM employee;`, (err, res) => {
+          if (err) throw err;
+          const employees = res.map(employee => ({name: employee.first_name + ' ' + employee.last_name, value: employee.id}));
+          inquirer.prompt([
+              {
+                  name: 'employee',
+                  type: 'rawlist',
+                  message: 'Which employee would you like to update the role for?',
+                  choices: employees
+              },
+              {
+                  name: 'newRole',
+                  type: 'rawlist',
+                  message: 'Choose employee\'s new role?',
+                  choices: roles
+              },
+          ]).then((answer) => {
+              db.query(`UPDATE employee SET ? WHERE ?`, 
+              [
+                  {
+                      role_id: answer.newRole,
+                  },
+                  {
+                      id: answer.employee,
+                  },
+              ], 
+              (err) => {
+                  if (err) throw err;
+                  console.log(`\n Employee's role updated! \n`);
+                  initPrompt();
+              })
+          })
+      })
+  })
+};
 
-// // Query database
-// db.query('SELECT * FROM books', function (err, results) {
-//   console.log(results);
-// });
+viewRole = () => {
+  db.query(
+    `SELECT roles.id, roles.title, roles.salary, department.names AS department
+    FROM department
+    JOIN roles ON roles.department_id = department.id 
+    ORDER BY roles.id ASC;`,
+    (err, res) => {
+      if (err) throw err;
+      console.table(res);
+      initPrompt();
+  })
+};
+
+viewDepartment = () => {
+  db.query(
+    `SELECT * FROM department 
+    ORDER BY id ASC;`, 
+    (err, res) => {
+      if (err) throw err;
+      console.table(res);
+      initPrompt();
+  })
+};
 
 // Default response for any other request (Not Found)
 app.use((req, res) => {
