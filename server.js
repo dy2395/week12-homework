@@ -3,7 +3,6 @@ const express = require('express');
 const mysql = require('mysql2');
 const inquirer = require ("inquirer");
 const fs = require('fs');
-const { resolveSoa } = require('dns');
 
 const PORT = process.env.PORT || 3001;
 const app = express();
@@ -19,7 +18,7 @@ const db = mysql.createConnection(
     // MySQL username,
     user: 'root',
     // {TODO: Add your MySQL password}
-    password: '1Bmflshzbqb',
+    password: 'MySQLpassword',
     database: 'employee_db'
   },
   console.log(`Connected to the employee_db database.`)
